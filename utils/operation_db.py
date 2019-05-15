@@ -3,92 +3,75 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pymysql
-import base.setting
+from resources.settings import CASE_DATABASE
 
 
 class OperationDB:
+    def __init__(self, db_name=None, *args, **kwargs):
+        if db_name is None:
+            self.db_info = CASE_DATABASE.get("dev")
+        else: 
+            self.db_info = CASE_DATABASE.get(db_name)
+        self.mycursor = self._get_db()
 
-    def __init__(self):
-        self.host = base.setting.db_host
-        self.port = base.setting.db_port
-        self.user = base.setting.db_user
-        self.pwd = base.setting.db_password
-        self.db_name = base.setting.db_db
-        self.db = self.get_db()
-        self.mycursor = self.get_cursor()
-
-    def get_db(self):
-        db = pymysql.connect(host=self.host,
-                             port=self.port,
-                             user=self.user,
-                             password=self.pwd,
-                             db=self.db_name,
-                             charset="utf8",
+    def _get_db(self):
+        db_session = pymysql.connect(host=self.db_info.get("HOST"),
+                             port=int(self.db_info.get("PORT")),
+                             db=self.db_info.get("NAME"),
+                             user=self.db_info.get("USER"),
+                             password=self.db_info.get("PASSWORD"),
+                             charset=self.db_info.get("CHARSET"),
                              autocommit=True,
                              cursorclass=pymysql.cursors.DictCursor)
-        return db
-
-    # def get_db(self):
-    #     db = pymysql.connect(host='10.241.11.7',
-    #                          port=4000,
-    #                          user='root',
-    #                          password='pAssw0rd',
-    #                          db='datatron',
-    #                          charset="utf8",
-    #                          autocommit=True,
-    #                          cursorclass=pymysql.cursors.DictCursor)
-    #     return db
-
-    def get_cursor(self):
-        mycursor = self.db.cursor()
+        mycursor = db_session.cursor()
         return mycursor
 
-    # 获取行数
-    def get_effect_row(self, sql, paramers=None):
-        if paramers is None:
-            effect_row = self.mycursor.execute(sql)
-        else:
-            effect_row = self.mycursor.execute(sql % paramers)
+    def get_fetchall(self, sql, paramers=None):
+        """返回全部查询结果"""
+        self.mycursor.execute(sql)
+        row_all = self.mycursor.fetchall()
+        return row_all
+
+    def get_effect_row(self, sql):
+        """
+        获取查询结果的行数
+        """
+        effect_row = self.mycursor.execute(sql)
+        self.close_db()
         return effect_row
 
-    # 获取第一个返回结果
-    def get_fetchone(self, sql, paramers=None):
-        if paramers is None:
-            self.mycursor.execute(sql)
-        else:
-            self.mycursor.execute(sql % paramers)
+    def get_fetchone(self, sql):
+        """
+        获取第一个返回结果
+        返回查询结果的json
+        """
+        self.mycursor.execute(sql)
         row_one = self.mycursor.fetchone()
+        self.close_db()
         return row_one
 
-    # 获取指定返回结果
     def get_fetchmany(self, sql, n, paramers=None):
+        """返回指定查询行数的结果"""
         if paramers is None:
             self.mycursor.execute(sql)
         else:
             self.mycursor.execute(sql % paramers)
         row_num = self.mycursor.fetchmany(n)
+        self.close_db()
         return row_num
 
-    # 获取全部返回结果
-    def get_fetchall(self, sql, paramers=None):
-        if paramers is None:
-            self.mycursor.execute(sql)
-        else:
-            self.mycursor.execute(sql % paramers)
-        row_all = self.mycursor.fetchall()
-        return row_all
-
-    # 更新数据
     def update_data(self, sql):
+        """更新数据库"""
         try:
             self.mycursor.execute(sql)
             self.db.commit()
         except Exception as e:
             self.db.rollback()
             print("更新数据失败", e)
+        self.close_db()
 
-    # 插入数据，并返回自增id
     def insert_data(self, sql):
+        """插入数据，并返回自增id"""
         try:
             self.mycursor.execute(sql)
             self.db.commit()
@@ -97,23 +80,25 @@ class OperationDB:
         except Exception as e:
             self.db.rollback()
             print("插入数据失败", e)
+        self.close_db()
 
-    # 删除数据
     def delete_data(self, sql):
+        """删除数据"""
         try:
             self.mycursor.execute(sql)
             self.db.commit()
         except Exception as e:
             self.db.rollback()
             print("删除数据失败", e)
+        self.close_db()
 
-    # 关闭数据库连接
     def close_db(self):
+        """关闭数据库连接"""
         self.mycursor.close()
 
 
 if __name__ == '__main__':
-    dbdata = OperationDB()
-    sql = '''select id from zone where status != 3;'''
-    a = dbdata.get_effect_row(sql)
+    dbdata = OperationDB("testcase")
+    sql = '''SELECT * FROM `auth_group_permissions` where id = 1;'''
+    a = dbdata.get_fetchone(sql)
     print(a)
