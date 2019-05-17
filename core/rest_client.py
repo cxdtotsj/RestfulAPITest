@@ -8,7 +8,8 @@ import resources.settings
 
 
 class RestClient:
-    """初始化session，并鉴权"""
+    """初始化session，并鉴权
+    """
     def __init__(self, base_url=None, **kwargs):
         if base_url:
             self.base_url = base_url
@@ -20,7 +21,8 @@ class RestClient:
     
     def __session(self, username=None, password=None, 
             token=None, email=None, mobile=None):
-        """session鉴权的三种方式"""
+        """session鉴权的三种方式
+        """
         # 1. 输入 username, password
         # 2. 输入固定的token
         # 3. 通过 /user/login 接口，获取动态token
@@ -38,7 +40,8 @@ class RestClient:
         return session
     
     def __login(self, url, password, email=None, mobile=None):
-        """获取动态token"""
+        """获取动态token
+        """
         url = self.__get_url(url)
         data = {
             "email": email,
@@ -54,7 +57,8 @@ class RestClient:
             print("用户登录失败")
     
     def __get_url(self, url_params):
-        """拼接URL"""
+        """拼接URL
+        """
         url = "{}{}?debug=1".format(self.base_url, url_params)
         return url
     
@@ -91,7 +95,8 @@ class RestClient:
                 return "\033[31m {} \033[0m".format({"err":res.text, "request_id": "X-Request-Id 获取失败"})
 
     def assertInfo(self,message):
-        """assert错误信息输出"""
+        """assert错误信息输出
+        """
         return "\033[31m {} \033[0m".format(message)
     
     def request(self, url, method_name, data=None, json=None, **kwargs):
