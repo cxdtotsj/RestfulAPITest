@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import requests
 import json as json_parse
-import core.setting
+import resources.settings
 
 
 class RestClient:
@@ -13,7 +13,7 @@ class RestClient:
         if base_url:
             self.base_url = base_url
         else:
-            self.base_url = core.setting.base_url
+            self.base_url = resources.setting.base_url
             if not self.base_url:
                 raise RuntimeError("no url been set.")
         self.session = self.__session(**kwargs)
